@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
 public class S_MainCamera : MonoBehaviour{
+    [SerializeField] public Material material;
     static public Camera cam;
 
     float zoomAmount = 0.25f;
@@ -11,30 +13,41 @@ public class S_MainCamera : MonoBehaviour{
     float maxRotation = 50f;
 
     bool mouseButtonDown = false;
+    bool toggle = false;
     Vector3 mousePos;
+
+    List<Vector3> path = new List<Vector3>();
+    GameObject point;
 
     void Start(){
         cam = GetComponentInChildren<Camera>();
     }
 
     void Update(){
-        if(Input.GetMouseButton(0))
-            mouseButtonDown = true;
-        else mouseButtonDown = false;
+        if(Input.GetKey(KeyCode.Tab))
+            toggle = !toggle;
 
 
+        camMove(Input.GetMouseButton(0));
+        createPathPoint(toggle,Input.GetMouseButtonDown(0)); // not working internally
+        
     }
-    void FixedUpdate(){
-        camMove(mouseButtonDown);
-        Debug.Log("location of hit : " + getHitLocation());
+    void createPathPoint(bool toggle, bool buttonDown){ // not working because of hover
+        Debug.Log(getHoverLocation());
+        if(toggle && buttonDown){
+            point = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            point.transform.SetPositionAndRotation(getHoverLocation(),new Quaternion(0,0,0,0));
+            point.GetComponent<MeshRenderer>().material = material;
+            Debug.Log("inside createPathPoint");
+        }
     }
-    
-    Vector3 getHitLocation(){
+    Vector3 getHoverLocation(){ // not working because of ?
         mousePos = Input.mousePosition;
-        mousePos.z = 100f; // size of the ray
+        mousePos.z = 1000f;
         mousePos = cam.ScreenToWorldPoint(mousePos);
         Ray ray = cam.ScreenPointToRay(mousePos);
-        Physics.Raycast(ray, out RaycastHit hit, 100);
+        Debug.DrawRay(cam.transform.position, mousePos , Color.blue);
+        Physics.Raycast(ray, out RaycastHit hit, 1000);
         return hit.point;
     }
     void camMove(bool buttonDown){
