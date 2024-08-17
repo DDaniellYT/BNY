@@ -3,47 +3,25 @@ using UnityEditor;
 using UnityEngine;
 
 public class S_MainCamera : MonoBehaviour{
-    [SerializeField] public Material material;
     static public Camera cam;
+    static public Vector3 hoverLocation;
 
     float zoomAmount = 0.25f;
     float sensitivity = 1f;
 
     float minRotation = 20f;
     float maxRotation = 50f;
-
-    bool mouseButtonDown = false;
-    bool toggle = false;
     Vector3 mousePos;
-
-    List<Transform> path = new List<Transform>();
-    GameObject point;
 
     void Start(){
         cam = GetComponentInChildren<Camera>();
     }
 
     void Update(){
-        if(Input.GetKeyDown(KeyCode.Tab))
-            toggle = !toggle;
-
+        hoverLocation = getHoverLocation();
         camMove(Input.GetMouseButton(0));
-        createPathPoint(toggle, Input.GetMouseButtonUp(0));
-        
     }
-    void createPathPoint(bool toggle, bool button){
-        Debug.Log(getHoverLocation());
-        if(toggle && button){
-            Vector3 locTemp = getHoverLocation();
-            if(locTemp != null){
-                point = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                point.transform.SetPositionAndRotation(locTemp,new Quaternion(0,0,0,0));
-                point.GetComponent<MeshRenderer>().material = material;
-                path.Add(point.transform);
-            }
-        }
-    }
-    Vector3 getHoverLocation(){
+    public Vector3 getHoverLocation(){
         mousePos = Input.mousePosition;
         mousePos.z = 1000f;
         mousePos = cam.ScreenToWorldPoint(mousePos);
@@ -53,7 +31,7 @@ public class S_MainCamera : MonoBehaviour{
             return new Vector3(hit.point.x,0,hit.point.z);
         else return new Vector3();
     }
-    void camMove(bool buttonDown){
+    public void camMove(bool buttonDown){
         if(buttonDown){ // check for visual mode
             transform.eulerAngles += new Vector3(Input.GetAxis("Mouse Y"),Input.GetAxis("Mouse X"),0) * sensitivity;
 
