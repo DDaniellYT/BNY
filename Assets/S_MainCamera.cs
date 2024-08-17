@@ -16,7 +16,7 @@ public class S_MainCamera : MonoBehaviour{
     bool toggle = false;
     Vector3 mousePos;
 
-    List<Vector3> path = new List<Vector3>();
+    List<Transform> path = new List<Transform>();
     GameObject point;
 
     void Start(){
@@ -24,31 +24,34 @@ public class S_MainCamera : MonoBehaviour{
     }
 
     void Update(){
-        if(Input.GetKey(KeyCode.Tab))
+        if(Input.GetKeyDown(KeyCode.Tab))
             toggle = !toggle;
 
-
         camMove(Input.GetMouseButton(0));
-        createPathPoint(toggle,Input.GetMouseButtonDown(0)); // not working internally
+        createPathPoint(toggle, Input.GetMouseButtonUp(0));
         
     }
-    void createPathPoint(bool toggle, bool buttonDown){ // not working because of hover
+    void createPathPoint(bool toggle, bool button){
         Debug.Log(getHoverLocation());
-        if(toggle && buttonDown){
-            point = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            point.transform.SetPositionAndRotation(getHoverLocation(),new Quaternion(0,0,0,0));
-            point.GetComponent<MeshRenderer>().material = material;
-            Debug.Log("inside createPathPoint");
+        if(toggle && button){
+            Vector3 locTemp = getHoverLocation();
+            if(locTemp != null){
+                point = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                point.transform.SetPositionAndRotation(locTemp,new Quaternion(0,0,0,0));
+                point.GetComponent<MeshRenderer>().material = material;
+                path.Add(point.transform);
+            }
         }
     }
-    Vector3 getHoverLocation(){ // not working because of ?
+    Vector3 getHoverLocation(){
         mousePos = Input.mousePosition;
         mousePos.z = 1000f;
         mousePos = cam.ScreenToWorldPoint(mousePos);
-        Ray ray = cam.ScreenPointToRay(mousePos);
-        Debug.DrawRay(cam.transform.position, mousePos , Color.blue);
-        Physics.Raycast(ray, out RaycastHit hit, 1000);
-        return hit.point;
+        Ray ray = new Ray(cam.transform.position,mousePos-cam.transform.position);
+        Debug.DrawRay(cam.transform.position, mousePos-cam.transform.position , Color.blue);
+        if(Physics.Raycast(ray, out RaycastHit hit, 1000))
+            return new Vector3(hit.point.x,0,hit.point.z);
+        else return new Vector3();
     }
     void camMove(bool buttonDown){
         if(buttonDown){ // check for visual mode
